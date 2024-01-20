@@ -24,9 +24,6 @@
 ##################################
 
 import tkinter as tk
-import customtkinter
-from customtkinter import CTkButton
-from customtkinter import CTkEntry
 from tkinter import ttk
 from tkinter import messagebox
 from subprocess import check_output, STDOUT, CalledProcessError
@@ -36,13 +33,12 @@ from os import getuid, system, _exit, path, makedirs
 from webbrowser import open_new_tab
 import sys
 from datetime import datetime
+import textwrap
 
-customtkinter.set_appearance_mode("Dark")
-customtkinter.set_default_color_theme("blue")
-BACKGROUND = "black"
-FOREGROUND = "white"
-BUTTON_BACKGROUND = "#c10ffc"
-BUTTON_ACTIVE_BACKGROUND = "#76e7ff"
+BACKGROUND = "#d9d9d9"
+FOREGROUND = "black"
+BUTTON_BACKGROUND = "#ffb253"
+BUTTON_ACTIVE_BACKGROUND = "#ffbf71"
 
 HISTORY_FILE_DIRECTORY = path.expanduser("~/.local/share/zerotier-gui")
 HISTORY_FILE_NAME = "network_history.json"
@@ -52,137 +48,56 @@ class MainWindow:
     def __init__(self):
         self.load_network_history()
 
-        # self.window = tk.Tk(className="zerotier-gui")
-        self.window = customtkinter.CTk(className="zerotier-gui")
-
-        self.window.title("ZeroTier")
-        self.window.resizable(width=True, height=True)
+        self.window = tk.Tk(className="zerotier-gui")
+        self.window.title("ZeroTier-GUI")
+        self.window.resizable(width=False, height=False)
 
         # layout setup
-        cTopFrame = customtkinter.CTkFrame(
-            master=self.window,
-            width=200,
-            height=100,
-            border_width=1,
-            border_color="#ffff00",
-            fg_color=("#2080fe", "#000000"),
-            bg_color="#000000",
-        )
         self.topFrame = tk.Frame(self.window, padx=20, pady=10, bg=BACKGROUND)
-        self.topBottomFrame = tk.Frame(cTopFrame, padx=20, bg=BACKGROUND)
-        self.middleFrame = tk.Frame(cTopFrame, padx=20, bg=BACKGROUND)
+        self.topBottomFrame = tk.Frame(self.window, padx=20, bg=BACKGROUND)
+        self.middleFrame = tk.Frame(self.window, padx=20, bg=BACKGROUND)
         self.bottomFrame = tk.Frame(self.window, padx=20, pady=10, bg=BACKGROUND)
-        self.ubottomFrame = tk.Frame(self.window, padx=20, pady=10, bg=BACKGROUND)
 
-        # cTopFrame.configure(text="halee")
-        self.window.minsize(700, 400)
         # widgets
         self.networkLabel = tk.Label(
-            self.middleFrame,
+            self.topFrame,
             text="Joined Networks:",
             font=40,
             bg=BACKGROUND,
             fg=FOREGROUND,
         )
-        # self.refreshButton = self.formatted_buttons(
-        #     self.topFrame,
-        #     text="Refresh Networks",
-        #     command=self.refresh_networks,
-        # )
-        refreshButton = self.customized_btn(
+        self.refreshButton = self.formatted_buttons(
             self.topFrame,
             text="Refresh Networks",
-            # fg_color=BUTTON_BACKGROUND,
-            command=self.refresh_networks
-            # ,corner_radius=20
-        )
-
-        refreshButton = CTkButton(
-            self.topFrame,
-            text="Refresh Networks",
-            fg_color=BUTTON_BACKGROUND,
             command=self.refresh_networks,
-            corner_radius=20,
         )
-        refreshButton.pack(side="right", anchor="sw", padx=4)
-        # self.aboutButton = self.formatted_buttons(
-        #     self.topFrame, text="About", command=self.about_window
-        # )
-        aboutButton = CTkButton(
-            self.topFrame,
-            text="About",
-            fg_color=BUTTON_BACKGROUND,
-            command=self.about_window,
-            corner_radius=20,
+        self.aboutButton = self.formatted_buttons(
+            self.topFrame, text="About", command=self.about_window
         )
-        aboutButton.pack(side="right", anchor="sw", padx=4)
-        # self.peersButton = self.formatted_buttons(
-        #     self.topFrame, text="Show Peers", command=self.see_peers
-        # )
-        peersButton = CTkButton(
-            self.topFrame,
-            text="Show Peers",
-            fg_color=BUTTON_BACKGROUND,
-            command=self.see_peers,
-            corner_radius=20,
+        self.peersButton = self.formatted_buttons(
+            self.topFrame, text="Show Peers", command=self.see_peers
         )
-        peersButton.pack(side="right", anchor="sw", padx=4)
-        # self.joinButton = self.formatted_buttons(
-        #     self.topFrame,
-        #     text="Join Network",
-        #     command=self.create_join_network_window,
-        # )
-        joinButton = CTkButton(
+        self.joinButton = self.formatted_buttons(
             self.topFrame,
             text="Join Network",
             command=self.create_join_network_window,
-            fg_color=BUTTON_BACKGROUND,
-            corner_radius=20,
         )
-        joinButton.pack(side="right", anchor="sw")
 
-        # self.networkListScrollbar = tk.Scrollbar(
-        #     self.middleFrame, bd=2, bg=BACKGROUND
-        # )
-        networkListScrollbar = customtkinter.CTkScrollbar(
-            self.middleFrame
-            # bd=2, bg=BACKGROUND
-        )
-        networkListScrollbar.pack(side="right", fill="both")
-        # self.networkListScrollbar = customtkinter.CTkScrollbar(
-        #             self.middleFrame, bd=2, bg=BACKGROUND
-        #         )
-        s = ttk.Style()
+        self.networkListScrollbar = tk.Scrollbar(self.middleFrame, bd=2, bg=BACKGROUND)
 
-        # Set the selection background color to green.
-        s.map("Custom.Treeview", background=[("selected", "green")])
-        self.networkList = TreeView(
-            self.middleFrame, "Network ID", "Name", "state", "Status"
-        )
-        # self.networkList.style("Custom.Treeview")
-        self.networkList.column("Network ID", stretch=False, width=180)
-        self.networkList.column("state", stretch=False, width=80)
-        self.networkList.column("Status", stretch=False, width=60)
+        self.networkList = TreeView(self.middleFrame, "Network ID", "Name", "Status")
+        self.networkList.column("Network ID", width=40)
+        self.networkList.column("Status", width=40)
 
         self.networkList.bind("<Double-Button-1>", self.call_see_network_info)
 
-        # self.leaveButton = self.formatted_buttons(
-        #     self.bottomFrame,
-        #     text="Leave Network",
-        #     bg=BUTTON_BACKGROUND,
-        #     activebackground=BUTTON_ACTIVE_BACKGROUND,
-        #     command=self.leave_network,
-        # )
-        leaveButton = CTkButton(
+        self.leaveButton = self.formatted_buttons(
             self.bottomFrame,
             text="Leave Network",
-            # bg=BUTTON_BACKGROUND,
-            # activebackground=BUTTON_ACTIVE_BACKGROUND,
+            bg=BUTTON_BACKGROUND,
+            activebackground=BUTTON_ACTIVE_BACKGROUND,
             command=self.leave_network,
-            corner_radius=20,
         )
-        leaveButton.pack(side="left", fill="x", padx=4)
-        # self.joinButton = self.formatted_buttons(
         self.ztCentralButton = self.formatted_buttons(
             self.bottomFrame,
             text="ZeroTier Central",
@@ -190,15 +105,6 @@ class MainWindow:
             activebackground=BUTTON_ACTIVE_BACKGROUND,
             command=self.zt_central,
         )
-        ztCentralButton = CTkButton(
-            self.bottomFrame,
-            text="ZeroTier Central",
-            # bg=BUTTON_BACKGROUND,
-            # activebackground=BUTTON_ACTIVE_BACKGROUND,
-            command=self.zt_central,
-            corner_radius=20,
-        )
-        ztCentralButton.pack(side="left", fill="x", padx=4)
         self.toggleConnectionButton = self.formatted_buttons(
             self.bottomFrame,
             text="Disconnect/Connect Interface",
@@ -206,87 +112,53 @@ class MainWindow:
             activebackground=BUTTON_ACTIVE_BACKGROUND,
             command=self.toggle_interface_connection,
         )
-        toggleConnectionButton = CTkButton(
+        self.toggleServiceButton = self.formatted_buttons(
             self.bottomFrame,
-            text="Disconnect/Connect Interface",
-            # bg=BUTTON_BACKGROUND,
-            # active_color=BUTTON_ACTIVE_BACKGROUND,
-            command=self.toggle_interface_connection,
-            corner_radius=20,
-        )
-        toggleConnectionButton.pack(side="left", fill="x")
-
-        # self.toggleServiceButton = self.formatted_buttons(
-        #     self.bottomFrame,
-        #     text="Toggle ZT Service",
-        #     bg=BUTTON_BACKGROUND,
-        #     activebackground=BUTTON_ACTIVE_BACKGROUND,
-        #     command=self.toggle_service,
-        # )
-        toggleServiceButton = CTkButton(
-            self.ubottomFrame,
             text="Toggle ZT Service",
-            # bg=BUTTON_BACKGROUND,
-            # activebackground=BUTTON_ACTIVE_BACKGROUND,
+            bg=BUTTON_BACKGROUND,
+            activebackground=BUTTON_ACTIVE_BACKGROUND,
             command=self.toggle_service,
-            corner_radius=20,
         )
-        toggleServiceButton.pack(side="left", anchor="sw", padx=4)
         self.serviceStatusLabel = tk.Label(
-            self.ubottomFrame, font=40, bg=BACKGROUND, fg=FOREGROUND
+            self.bottomFrame, font=40, bg=BACKGROUND, fg=FOREGROUND
         )
         self.infoButton = self.formatted_buttons(
-            self.ubottomFrame,
+            self.bottomFrame,
             text="Network Info",
             bg=BUTTON_BACKGROUND,
             activebackground=BUTTON_ACTIVE_BACKGROUND,
             command=self.see_network_info,
         )
-        infoButton = CTkButton(
-            self.ubottomFrame,
-            text="Network Info",
-            # bg=BUTTON_BACKGROUND,
-            # active_color=BUTTON_ACTIVE_BACKGROUND,
-            command=self.see_network_info,
-            corner_radius=20,
-        )
-        infoButton.pack(side="left", fill="x")
 
         # pack widgets
-        self.networkLabel.pack(side="top", anchor="sw")
-        # self.refreshButton.pack(side="right", anchor="se")
-        # self.aboutButton.pack(side="right", anchor="sw")
-        # self.peersButton.pack(side="right", anchor="sw")
-        # self.joinButton.pack(side="right", anchor="se")
+        self.networkLabel.pack(side="left", anchor="sw")
+        self.refreshButton.pack(side="right", anchor="se")
+        self.aboutButton.pack(side="right", anchor="sw")
+        self.peersButton.pack(side="right", anchor="sw")
+        self.joinButton.pack(side="right", anchor="se")
 
-        # self.networkListScrollbar.pack(side="right", fill="both")
+        self.networkListScrollbar.pack(side="right", fill="both")
         self.networkList.pack(side="bottom", fill="x")
 
-        # self.leaveButton.pack(side="left", fill="x")
-        # self.toggleConnectionButton.pack(side="left", fill="x")
-        # self.infoButton.pack(side="right", fill="x")
-        # self.ztCentralButton.pack(side="right", fill="x")
-        # self.toggleServiceButton.pack(side="right", fill="x")
+        self.leaveButton.pack(side="left", fill="x")
+        self.toggleConnectionButton.pack(side="left", fill="x")
+        self.infoButton.pack(side="right", fill="x")
+        self.ztCentralButton.pack(side="right", fill="x")
+        self.toggleServiceButton.pack(side="right", fill="x")
         self.serviceStatusLabel.pack(side="right", fill="x", padx=(100, 0))
 
         # frames
-
         self.topFrame.pack(side="top", fill="x")
-        cTopFrame.pack(side="top", pady=5, padx=10, fill="x")
-        # self.topBottomFrame.pack(side="top", fill="x")
-        # self.middleFrame.pack(side="top", fill="x")
-        self.topBottomFrame.pack(side="top", pady=10, padx=5, fill="x")
-        self.middleFrame.pack(side="top", pady=10, padx=5, fill="x")
+        self.topBottomFrame.pack(side="top", fill="x")
+        self.middleFrame.pack(side="top", fill="x")
         self.bottomFrame.pack(side="top", fill="x")
-        self.ubottomFrame.pack(side="top", fill="x")
 
         # extra configuration
         self.refresh_networks()
         self.update_service_label()
 
-        self.networkList.config(yscrollcommand=networkListScrollbar.set)
-        # self.networkListScrollbar.config(command=self.networkList.yview)
-        networkListScrollbar.configure(command=self.networkList.yview)
+        self.networkList.config(yscrollcommand=self.networkListScrollbar.set)
+        self.networkListScrollbar.config(command=self.networkList.yview)
 
     def load_network_history(self):
         history_file_path = path.join(HISTORY_FILE_DIRECTORY, HISTORY_FILE_NAME)
@@ -322,7 +194,7 @@ class MainWindow:
 
     def update_service_label(self):
         state = self.get_service_status()
-        self.serviceStatusLabel.configure(text=f"Service Status: {state}")
+        self.serviceStatusLabel.configure(text=f"Service Status: {state} | ")
 
     def zt_central(self):
         open_new_tab("https://my.zerotier.com")
@@ -398,9 +270,6 @@ class MainWindow:
     def refresh_networks(self):
         self.networkList.delete(*self.networkList.get_children())
         networks = []
-
-        currentNetworkInfo = self.get_networks_info()[0]
-
         # outputs info of networks in json format
         networkData = self.get_networks_info()
 
@@ -414,7 +283,6 @@ class MainWindow:
                 (
                     networkData[networkPosition]["id"],
                     networkData[networkPosition]["name"],
-                    self.get_interface_state(currentNetworkInfo["portDeviceName"]),
                     networkData[networkPosition]["status"],
                     isDown,
                 )
@@ -423,15 +291,12 @@ class MainWindow:
         for (
             networkId,
             networkName,
-            networkState,
             networkStatus,
             isDown,
         ) in networks:
             if not networkName:
                 networkName = "Unknown Name"
-            self.networkList.insert(
-                (networkId, networkName, networkState, networkStatus), isDown
-            )
+            self.networkList.insert((networkId, networkName, networkStatus), isDown)
 
         self.update_network_history_names()
 
@@ -472,12 +337,11 @@ class MainWindow:
         entry = tk.Entry(
             frame,
             relief=tk.FLAT,
-            bg="#000000",
-            background="#000000",
+            bg=BACKGROUND,
             highlightthickness=0,
-            highlightcolor="#000000",
-            fg="#aaee00",
-            selectforeground="black",
+            highlightcolor=BACKGROUND,
+            fg=FOREGROUND,
+            selectforeground=FOREGROUND,
             selectborderwidth=0,
             justify=justify,
             font=font,
@@ -487,17 +351,6 @@ class MainWindow:
         entry.config(state="readonly", width=len(text))
 
         return entry
-
-    def customCB(self, frame, fg, bg, variable, highlightthickness):
-        cbox = customtkinter.CTkCheckBox(
-            frame,
-            fg_color=fg,
-            bg_color=bg,
-            corner_radius=2,
-            border_width=highlightthickness,
-            textvariable=variable,
-        )
-        return cbox
 
     # creates correctly formatted buttons
     def formatted_buttons(
@@ -520,34 +373,6 @@ class MainWindow:
             activebackground=activebackground,
             activeforeground=activeforeground,
             command=command,
-        )
-        return button
-        # creates correctly formatted buttons
-
-    def customized_btn(
-        self,
-        frame,
-        text="",
-        bg="#00aa00",
-        fg=FOREGROUND,
-        # justify="left",
-        activebackground=BUTTON_ACTIVE_BACKGROUND,
-        command="",
-        activeforeground=FOREGROUND,
-        corner_radius=20,
-        textcolor=("#ffcc00", "#00cdff"),
-        hovercolor=("#ffcc00", "#000044"),
-    ):
-        button = CTkButton(
-            frame,
-            text=text,
-            fg_color=bg,
-            # text_color=fg,
-            # justify=justify,
-            command=command,
-            corner_radius=20,
-            text_color=textcolor,
-            hover_color=hovercolor,
         )
         return button
 
@@ -615,24 +440,14 @@ class MainWindow:
                 currently_joined = "-"
                 network_name = "-"
             network_id_label.configure(
-                text="{:20s}{}".format("Network ID:", network_id),
-                foreground="#44ee44",
-                background=BACKGROUND,
+                text="{:20s}{}".format("Network ID:", network_id)
             )
-            network_name_label.configure(
-                text="{:20s}{}".format("Name:", network_name),
-                foreground="#44ee44",
-                background=BACKGROUND,
-            )
+            network_name_label.configure(text="{:20s}{}".format("Name:", network_name))
             last_joined_label.configure(
-                text="{:20s}{}".format("Last joined date:", join_date),
-                foreground="#44ee44",
-                background=BACKGROUND,
+                text="{:20s}{}".format("Last joined date:", join_date)
             )
             currently_joined_label.configure(
-                text="{:20s}{}".format("Currently joined:", currently_joined),
-                foreground="#44ee44",
-                background=BACKGROUND,
+                text="{:20s}{}".format("Currently joined:", currently_joined)
             )
 
         def on_network_selected(event):
@@ -674,40 +489,20 @@ class MainWindow:
             text="Join",
             command=lambda: join_network(network_entry_value.get()),
         )
-        cjoin_button = CTkButton(
-            bottom_frame,
-            text="Join",
-            fg_color=BUTTON_BACKGROUND,
-            corner_radius=20,
-            command=lambda: join_network(network_entry_value.get()),
-        )
         delete_history_entry_button = self.formatted_buttons(
             bottom_frame,
             text="Delete history entry",
             command=delete_history_entry,
         )
-        cdelete_history_entry_button = CTkButton(
-            bottom_frame,
-            text="Delete history entry",
-            command=delete_history_entry,
-            corner_radius=20,
-        )
 
-        join_title = tk.Label(
-            main_frame,
-            text="Join Network",
-            font="Monospace",
-            fg="#ffee00",
-            bg="#000000",
-        )
+        join_title = tk.Label(main_frame, text="Join Network", font="Monospace")
         network_history_list = TreeView(left_frame, "Network")
         network_history_scrollbar = tk.Scrollbar(left_frame, bd=2, bg=BACKGROUND)
-        cnetwork_history_scrollbar = customtkinter.CTkScrollbar(left_frame)
         network_history_list.config(yscrollcommand=network_history_scrollbar.set)
         network_history_scrollbar.config(command=network_history_list.yview)
 
         network_history_list.style.configure(
-            "NoBackground.Treeview", background=BACKGROUND, fg="#22ff22"
+            "NoBackground.Treeview", background=BACKGROUND
         )
         network_history_list.configure(
             show="tree", height=20, style="NoBackground.Treeview"
@@ -724,16 +519,6 @@ class MainWindow:
             width=20,
             font="Monospace",
             textvariable=network_entry_value,
-        )
-        jjoin_entry = CTkEntry(
-            bottom_frame,
-            placeholder_text="input here..",
-            # fg_color="#222222",
-            # bg_color="#22ee88",
-            text_color="#44eeaa",
-            width=200,
-            corner_radius=20,
-            font=("Monospace", 14),
         )
 
         network_id_label = tk.Label(
@@ -760,8 +545,7 @@ class MainWindow:
 
         join_title.pack(side="top")
         network_history_list.pack(side="left", padx=10, pady=10)
-        # network_history_scrollbar.pack(side="right", fill="y")
-        cnetwork_history_scrollbar.pack(side="right", fill="y")
+        network_history_scrollbar.pack(side="right", fill="y")
 
         network_id_label.pack(side="top", anchor="w")
         network_name_label.pack(side="top", anchor="w")
@@ -769,12 +553,9 @@ class MainWindow:
         currently_joined_label.pack(side="top", anchor="w")
 
         join_label.pack(side="left", anchor="w", pady=10)
-        # join_entry.pack(side="left", anchor="w", pady=10)
-        jjoin_entry.pack(side="left", anchor="w", pady=10)
-        cjoin_button.pack(side="left", pady=10)
-        # join_button.pack(side="left", pady=10)
-        # delete_history_entry_button.pack(side="left", pady=10)
-        cdelete_history_entry_button.pack(side="left", pady=10)
+        join_entry.pack(side="left", anchor="w", pady=10)
+        join_button.pack(side="left", pady=10)
+        delete_history_entry_button.pack(side="left", pady=10)
 
         left_frame.pack(side="left", fill="y", pady=10, padx=5)
         right_frame.pack(side="right", fill="y", pady=10, padx=5)
@@ -824,7 +605,7 @@ class MainWindow:
         middleFrame = tk.Frame(statusWindow, padx=20, pady=10, bg=BACKGROUND)
         bottomTopFrame = tk.Frame(statusWindow, padx=20, pady=10, bg=BACKGROUND)
         bottomFrame = tk.Frame(statusWindow, padx=20, pady=10, bg=BACKGROUND)
-        ubottomFrame = tk.Frame(statusWindow, padx=20, pady=30, bg=BACKGROUND)
+
         # widgets
         titleLabel = tk.Label(
             topFrame,
@@ -868,14 +649,6 @@ class MainWindow:
             activebackground=BUTTON_ACTIVE_BACKGROUND,
             command=lambda: statusWindow.destroy(),
         )
-        ccloseButton = CTkButton(
-            bottomTopFrame,
-            text="Close",
-            fg_color=BUTTON_BACKGROUND,
-            command=lambda: statusWindow.destroy(),
-            corner_radius=20,
-        )
-        ccloseButton.pack(side="top", padx=4)
 
         # credits
         creditsLabel1 = tk.Label(
@@ -898,7 +671,7 @@ class MainWindow:
         ztGuiVersionLabel.pack(side="top", anchor="w")
         statusLabel.pack(side="top", anchor="w")
 
-        # closeButton.pack(side="top")
+        closeButton.pack(side="top")
 
         creditsLabel1.pack(side="top", fill="x")
         creditsLabel2.pack(side="top")
@@ -907,7 +680,6 @@ class MainWindow:
         middleFrame.pack(side="top", fill="both")
         bottomTopFrame.pack(side="top", fill="both")
         bottomFrame.pack(side="top", fill="both")
-        ubottomFrame.pack(side="top", fill="both")
 
         statusWindow.mainloop()
 
@@ -917,8 +689,8 @@ class MainWindow:
             if info["ifname"] == interface:
                 state = info["operstate"]
                 break
-            # state = "UNKNOWN"
-            state = "LINK UP"
+            state = "UNKNOWN"
+
         return state
 
     def toggle_interface_connection(self):
@@ -998,15 +770,6 @@ class MainWindow:
             activebackground=BUTTON_ACTIVE_BACKGROUND,
             command=lambda: pathsWindow.destroy(),
         )
-        ccloseButton = CTkButton(
-            bottomFrame,
-            text="Close",
-            fg_color=BUTTON_BACKGROUND,
-            command=lambda: pathsWindow.destroy(),
-            corner_radius=20,
-        )
-        ccloseButton.pack(side="left", fill="x", padx=4)
-
         refreshButton = self.formatted_buttons(
             bottomFrame,
             text="Refresh Paths",
@@ -1020,7 +783,7 @@ class MainWindow:
         pathsListScrollbar.pack(side="right", fill="both")
         pathsList.pack(side="bottom", fill="x")
 
-        # closeButton.pack(side="left", fill="x")
+        closeButton.pack(side="left", fill="x")
         refreshButton.pack(side="right", fill="x")
 
         topFrame.pack(side="top", fill="x", pady=(30, 0))
@@ -1057,25 +820,11 @@ class MainWindow:
             activebackground=BUTTON_ACTIVE_BACKGROUND,
             command=lambda: peersWindow.destroy(),
         )
-        ccloseButton = customtkinter.CTkButton(
-            bottomFrame,
-            text="Close",
-            fg_color=BUTTON_BACKGROUND,
-            command=lambda: peersWindow.destroy(),
-            corner_radius=20,
-        )
         refreshButton = self.formatted_buttons(
             bottomFrame,
             text="Refresh Peers",
             bg=BUTTON_BACKGROUND,
             activebackground=BUTTON_ACTIVE_BACKGROUND,
-            command=lambda: self.refresh_peers(peersList),
-        )
-        crefreshButton = customtkinter.CTkButton(
-            bottomFrame,
-            text="Refresh Peers",
-            fg_color=BUTTON_BACKGROUND,
-            corner_radius=20,
             command=lambda: self.refresh_peers(peersList),
         )
         seePathsButton = self.formatted_buttons(
@@ -1085,25 +834,14 @@ class MainWindow:
             activebackground=BUTTON_ACTIVE_BACKGROUND,
             command=lambda: self.see_peer_paths(peersList),
         )
-        cseePathsButton = customtkinter.CTkButton(
-            bottomFrame,
-            text="See Paths",
-            fg_color=BUTTON_BACKGROUND,
-            corner_radius=20,
-            command=lambda: self.see_peer_paths(peersList),
-        )
 
         # pack widgets
         peersListScrollbar.pack(side="right", fill="both")
         peersList.pack(side="bottom", fill="x")
 
-        # closeButton.pack(side="left", fill="x")
-        ccloseButton.pack(side="left", fill="x")
-
-        # refreshButton.pack(side="right", fill="x")
-        crefreshButton.pack(side="right", fill="x")
-        # seePathsButton.pack(side="right", fill="x")
-        cseePathsButton.pack(side="right", fill="x")
+        closeButton.pack(side="left", fill="x")
+        refreshButton.pack(side="right", fill="x")
+        seePathsButton.pack(side="right", fill="x")
 
         topFrame.pack(side="top", fill="x", pady=(30, 0))
         middleFrame.pack(side="top", fill="x")
@@ -1329,14 +1067,6 @@ class MainWindow:
             activebackground=BUTTON_ACTIVE_BACKGROUND,
             command=lambda: infoWindow.destroy(),
         )
-        ccloseButton = CTkButton(
-            bottomFrame,
-            text="Close",
-            fg_color=BUTTON_BACKGROUND,
-            command=lambda: infoWindow.destroy(),
-            corner_radius=20,
-        )
-        ccloseButton.pack(side="top")
 
         # pack widgets
         titleLabel.pack(side="top", anchor="n")
@@ -1369,7 +1099,7 @@ class MainWindow:
         allowDNSLabel.pack(side="left", anchor="w")
         allowDNSCheck.pack(side="left", anchor="w")
 
-        # closeButton.pack(side="top")
+        closeButton.pack(side="top")
 
         topFrame.pack(side="top", fill="both")
         middleFrame.pack(side="top", fill="both")
@@ -1425,8 +1155,8 @@ class TreeView(ttk.Treeview):
         self.style.configure("Treeview.Heading", font=("Monospace", 11))
         self.style.configure("Treeview", font=("Monospace", 11))
         self.style.layout("Treeview", [("Treeview.treearea", {"sticky": "nswe"})])
-        self.tag_configure("odd", background="#2c2c2c", foreground="#33ee44")
-        self.tag_configure("even", background="#000000", foreground="#33ee44")
+        self.tag_configure("odd", background="#fcfcfc")
+        self.tag_configure("even", background="#eeeeee")
         self.tag_configure("disabled", background="#d14444")
 
     def insert(self, values, disabled=False, **kwargs):
@@ -1444,34 +1174,58 @@ def manage_service(action):
         check_output(["systemctl", "stop", "zerotier-one"])
 
 
-# automates the process of copying the auth token
-def auth_token_setup():
-    if getuid() != 0:
-        # get username
-        username = check_output(["whoami"]).decode()
-        username = username.replace("\n", "")
-        allowed_to_run_as_root = messagebox.askyesno(
+def setup_auth_token():
+    if getuid() == 0:
+        return
+    if not path.isfile("/var/lib/zerotier-one/authtoken.secret"):
+        allowed_to_start_service = messagebox.askyesno(
             icon="info",
-            title="Root access needed",
-            message=f"In order to grant {username} permission "
-            "to use ZeroTier we need temporary root access to "
-            "store the Auth Token in your home folder. "
-            "Otherwise, you would need to run this "
-            "program as root. Grant access?",
+            title="No authtoken found",
+            message=textwrap.dedent(
+                """\
+                No authtoken.secret file has been found in
+                "/var/lib/zerotier-one". This usually means you
+                never started the zerotier-one service.
+                Do you wish to start it now?
+                """
+            ),
         )
-        if allowed_to_run_as_root:
-            # copy auth token to home directory and make the user own it
-            system(
-                f"pkexec bash -c "
-                '"cp /var/lib/zerotier-one/authtoken.secret '
-                f"/home/{username}/.zeroTierOneAuthToken && "
-                f"chown {username}:{username} "
-                f"/home/{username}/.zeroTierOneAuthToken && "
-                "chmod 0600 "
-                f'/home/{username}/.zeroTierOneAuthToken"'
-            )
+        if allowed_to_start_service:
+            manage_service("start")
         else:
             _exit(0)
+    username = check_output(["whoami"]).decode().strip()
+    allowed_to_run_as_root = messagebox.askyesno(
+        icon="info",
+        title="Root access needed",
+        message=f"In order to grant {username} permission "
+        "to use ZeroTier we need temporary root access to "
+        "add them to the zerotier-one group and change the "
+        "auth-token permissions in /var/lib/zerotier-one. "
+        "Otherwise, you would need to run this "
+        "program as root. Grant access?",
+    )
+    if allowed_to_run_as_root:
+        system(
+            textwrap.dedent(
+                f"""\
+            pkexec bash -c "usermod -aG zerotier-one {username} &&
+            chmod 660 /var/lib/zerotier-one/authtoken.secret &&
+            chmod 660 /var/lib/zerotier-one/identity.secret"
+            """
+            )
+        )
+        messagebox.showinfo(
+            title="Success",
+            message=textwrap.dedent(
+                """\
+                You were successfully added to the zerotier-one
+                group. If you're still having problems, you may need
+                to re-login in order for the changes to take effect.
+                """
+            ),
+        )
+    _exit(0)
 
 
 if __name__ == "__main__":
@@ -1492,7 +1246,7 @@ if __name__ == "__main__":
                     icon="error",
                     message="This user doesn't have access to ZeroTier!",
                 )
-                auth_token_setup()
+                setup_auth_token()
                 continue
             # service not running
             if error.returncode == 1:
