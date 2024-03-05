@@ -84,16 +84,12 @@ class MainWindow:
             bg=BACKGROUND,
             fg=FOREGROUND,
         )
-        # self.refreshButton = self.formatted_buttons(
-        #     self.topFrame,
-        #     text="Refresh Networks",
-        #     command=self.refresh_networks,
-        # )
+
         refreshButton = self.customized_btn(
             self.topFrame,
             text="Refresh Networks",
             # fg_color=BUTTON_BACKGROUND,
-            command=self.refresh_networks
+            command=self.refresh_networks,
             # ,corner_radius=20
         )
 
@@ -105,9 +101,7 @@ class MainWindow:
             corner_radius=20,
         )
         refreshButton.pack(side="right", anchor="sw", padx=4)
-        # self.aboutButton = self.formatted_buttons(
-        #     self.topFrame, text="About", command=self.about_window
-        # )
+
         aboutButton = CTkButton(
             self.topFrame,
             text="About",
@@ -116,9 +110,7 @@ class MainWindow:
             corner_radius=20,
         )
         aboutButton.pack(side="right", anchor="sw", padx=4)
-        # self.peersButton = self.formatted_buttons(
-        #     self.topFrame, text="Show Peers", command=self.see_peers
-        # )
+
         peersButton = CTkButton(
             self.topFrame,
             text="Show Peers",
@@ -127,11 +119,7 @@ class MainWindow:
             corner_radius=20,
         )
         peersButton.pack(side="right", anchor="sw", padx=4)
-        # self.joinButton = self.formatted_buttons(
-        #     self.topFrame,
-        #     text="Join Network",
-        #     command=self.create_join_network_window,
-        # )
+
         joinButton = CTkButton(
             self.topFrame,
             text="Join Network",
@@ -141,17 +129,12 @@ class MainWindow:
         )
         joinButton.pack(side="right", anchor="sw")
 
-        # self.networkListScrollbar = tk.Scrollbar(
-        #     self.middleFrame, bd=2, bg=BACKGROUND
-        # )
         networkListScrollbar = customtkinter.CTkScrollbar(
             self.middleFrame
             # bd=2, bg=BACKGROUND
         )
         networkListScrollbar.pack(side="right", fill="both")
-        # self.networkListScrollbar = customtkinter.CTkScrollbar(
-        #             self.middleFrame, bd=2, bg=BACKGROUND
-        #         )
+
         s = ttk.Style()
 
         # Set the selection background color to green.
@@ -163,16 +146,8 @@ class MainWindow:
         self.networkList.column("Network ID", stretch=False, width=180)
         self.networkList.column("state", stretch=False, width=80)
         self.networkList.column("Status", stretch=False, width=60)
-
         self.networkList.bind("<Double-Button-1>", self.call_see_network_info)
 
-        # self.leaveButton = self.formatted_buttons(
-        #     self.bottomFrame,
-        #     text="Leave Network",
-        #     bg=BUTTON_BACKGROUND,
-        #     activebackground=BUTTON_ACTIVE_BACKGROUND,
-        #     command=self.leave_network,
-        # )
         leaveButton = CTkButton(
             self.bottomFrame,
             text="Leave Network",
@@ -193,8 +168,6 @@ class MainWindow:
         ztCentralButton = CTkButton(
             self.bottomFrame,
             text="ZeroTier Central",
-            # bg=BUTTON_BACKGROUND,
-            # activebackground=BUTTON_ACTIVE_BACKGROUND,
             command=self.zt_central,
             corner_radius=20,
         )
@@ -216,13 +189,6 @@ class MainWindow:
         )
         toggleConnectionButton.pack(side="left", fill="x")
 
-        # self.toggleServiceButton = self.formatted_buttons(
-        #     self.bottomFrame,
-        #     text="Toggle ZT Service",
-        #     bg=BUTTON_BACKGROUND,
-        #     activebackground=BUTTON_ACTIVE_BACKGROUND,
-        #     command=self.toggle_service,
-        # )
         toggleServiceButton = CTkButton(
             self.ubottomFrame,
             text="Toggle ZT Service",
@@ -254,19 +220,8 @@ class MainWindow:
 
         # pack widgets
         self.networkLabel.pack(side="top", anchor="sw")
-        # self.refreshButton.pack(side="right", anchor="se")
-        # self.aboutButton.pack(side="right", anchor="sw")
-        # self.peersButton.pack(side="right", anchor="sw")
-        # self.joinButton.pack(side="right", anchor="se")
-
-        # self.networkListScrollbar.pack(side="right", fill="both")
         self.networkList.pack(side="bottom", fill="x")
 
-        # self.leaveButton.pack(side="left", fill="x")
-        # self.toggleConnectionButton.pack(side="left", fill="x")
-        # self.infoButton.pack(side="right", fill="x")
-        # self.ztCentralButton.pack(side="right", fill="x")
-        # self.toggleServiceButton.pack(side="right", fill="x")
         self.serviceStatusLabel.pack(side="right", fill="x", padx=(100, 0))
 
         # frames

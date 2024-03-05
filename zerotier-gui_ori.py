@@ -689,7 +689,7 @@ class MainWindow:
             if info["ifname"] == interface:
                 state = info["operstate"]
                 break
-            state = "UNKNOWN"
+            state = "LINK UP"
 
         return state
 
